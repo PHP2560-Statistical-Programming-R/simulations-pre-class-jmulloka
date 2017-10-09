@@ -30,15 +30,130 @@ options(scipen = 3, digits = 3)
 With this project we will simulate a famoues probability problem. This will not require knowledge of probability or statistics but only the logic to follow the steps in order to simulate this problem. This is one way to solve problems by using the computer. 
 
  1. **Gambler's Ruin**: Suppose you have a bankroll of $1000 and make bets of $100 on a fair game. By simulating the outcome directly for at most 5000 iterations of the game (or hands), estimate:
-    a. the probability that you have "busted" (lost all your money) by the time you have placed your one hundredth bet. 
+    a. the probability that you have "busted" (lost all your money) by the time you have placed your one hundredth bet.
+```{r}
+game<-function(bet, bankroll, p, n){
+  busted=0
+  while(bet<= bankroll & busted < n){
+    result = runif(1)
+    if (result>p){
+      bankroll=bankroll+bet
+    } else{
+      bankroll= bankroll-bet
+    }
+    busted=busted+1
+    if(bet>bankroll) {break}
+  }
+  return(busted)
+}
+
+trialn<-10000
+bet<-100
+bankroll<-1000
+p<-0.5
+n<-5000
+res<-replicate(trialn, game(bet, bankroll, p, n))
+
+dur100<- length(which(res<=100))
+prob.a<-dur100/trialn
+prob.a
+```
     b. the probability that you have busted by the time you have placed your five hundredth bet by simulating the outcome directly. 
+```{r}
+dur500<-length(which(res<=500))
+prob.b<-dur500/trialn
+prob.b
+```
+
     c. the mean time you go bust, given that you go bust within the first 5000 hands.
+```{r}
+duration.c<-res[!res==5000]
+mean.time<-mean(duration.c)
+mean.time
+```
+
     d. the mean and variance of your bankroll after 100 hands (including busts).
+```{r}
+bankroll.d<-rep(NA,n)
+
+for (j in 1:n){
+  x<-bankroll
+for (i in 1:100){
+if(x!=0){
+x<-x+100*sample(c(-1,1),1,replace=TRUE,prob=c(0.5,0.5))
+}}
+bankroll.d[j]<-x
+}
+mean.d<-mean(bankroll.d)
+var.d<-var(bankroll.d)
+mean.d
+var.d
+```
+
     e. the mean and variance of your bankroll after 500 hands (including busts).
+```{r}
+bankroll.d<-rep(NA,n)
+
+for (j in 1:n){
+  x<-bankroll
+for (i in 1:500){
+if(x!=0){
+x<-x+500*sample(c(-1,1),1,replace=TRUE,prob=c(0.5,0.5))
+}}
+bankroll.d[j]<-x
+}
+mean.d<-mean(bankroll.d)
+var.d<-var(bankroll.d)
+mean.d
+var.d
+```
+
+    
  
 Note: you *must* stop playing if your player has gone bust. How will you handle this in the `for` loop?
+You have to include a break in the loop.
+
 
 2. **Markov Chains**. Suppose you have a game where the probability of winning on your first hand is 48%; each time you win, that probability goes up by one percentage point for the next game (to a maximum of 100%, where it must stay), and each time you lose, it goes back down to 48%. Assume you cannot go bust and that the size of your wager is a constant $100.
     a. Is this a fair game? Simulate one hundred thousand sequential hands to determine the size of your return. Then repeat this simulation 99 more times to get a range of values to calculate the expectation.
+```{r}
+p<-.48
+dur2<-rep(NA,n)
+
+for (j in 1:n){
+  x<-bankroll
+  d<-0
+for (i in 1:n){
+if(x!=0){
+x<-x+100*sample(c(-1,1),1,replace=TRUE,prob=c(1-p,p))
+d<-i
+}else{break()}}
+dur2[j]<-d
+}
+
+prob.2a<-length(which(dur2<=100))/n
+prob.2a
+
+```
+
     b. Repeat this process but change the starting probability to a new value within 2% either way. Get the expected return after 100 repetitions. Keep exploring until you have a return value that is as fair as you can make it. Can you do this automatically?
+```{r}
+p<-.46
+dur2<-rep(NA,n)
+
+for (j in 1:n){
+  x<-bankroll
+  d<-0
+for (i in 1:n){
+if(x!=0){
+x<-x+100*sample(c(-1,1),1,replace=TRUE,prob=c(1-p,p))
+d<-i
+}else{break()}}
+dur2[j]<-d
+}
+
+prob.2b<-length(which(dur2<=100))/n
+prob.2b
+```
+
     c. Repeat again, keeping the initial probability at 48%, but this time change the probability increment to a value different from 1%. Get the expected return after 100 repetitions. Keep changing this value until you have a return value that is as fair as you can make it. 
